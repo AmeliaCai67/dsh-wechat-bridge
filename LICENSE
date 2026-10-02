@@ -1,6 +1,6 @@
 MIT License
 
-Copyright (c) 2026 AmeliaCai67
+Copyright (c) 2026 菜菜 (TAKA_tales) / AmeliaCai67
 
 Permission is hereby granted, free of charge, to any person obtaining a copy
 of this software and associated documentation files (the "Software"), to deal
@@ -19,3 +19,9 @@ AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
 LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
 SOFTWARE.
+
+---
+
+本软件的分发包含第三方代码：
+`vendor/weixin-dist/` 是 [@tencent-weixin/openclaw-weixin](https://www.npmjs.com/package/@tencent-weixin/openclaw-weixin)
+（Copyright (C) 2026 Tencent，MIT 许可证）的编译产物，许可证全文见该目录下的 `LICENSE`。

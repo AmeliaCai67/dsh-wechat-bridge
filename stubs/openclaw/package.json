@@ -1,0 +1,16 @@
+{
+  "name": "openclaw",
+  "version": "0.0.0-shim",
+  "type": "module",
+  "description": "OpenClaw 宿主的极简替身：只实现 dsh-wechat-bridge 用到的那些符号（腾讯 openclaw-weixin 需要的宿主接口）。",
+  "exports": {
+    "./plugin-sdk/account-id": "./plugin-sdk/account-id.js",
+    "./plugin-sdk/channel-config-schema": "./plugin-sdk/channel-config-schema.js",
+    "./plugin-sdk/channel-message": "./plugin-sdk/channel-message.js",
+    "./plugin-sdk/command-auth": "./plugin-sdk/command-auth.js",
+    "./plugin-sdk/config-runtime": "./plugin-sdk/config-runtime.js",
+    "./plugin-sdk/hook-runtime": "./plugin-sdk/hook-runtime.js",
+    "./plugin-sdk/infra-runtime": "./plugin-sdk/infra-runtime.js",
+    "./plugin-sdk/plugin-runtime": "./plugin-sdk/plugin-runtime.js"
+  }
+}

@@ -1,0 +1,24 @@
+# dsh-wechat-bridge bundle patch
+#
+# 这是发布包里的 `dsh.bundle.patch` 层。通过官方 CLI 安装时：
+#
+#   dsh plugin --profile web add github:AmeliaCai67/dsh-wechat-bridge
+#
+# 命令会对照已装包 reconcile `dsh.profile.bundles`，看到这个声明就把
+# `dsh-wechat-bridge` 追加进 bundle 栈；profile 启动时合并【本文件】——
+# 效果等同于在 profile 的 cordis.patch.yml 里手写下面这段 insert。
+# **不用改任何 profile 文件，一条命令装好并挂上。**
+#
+# ⚠️ 如果你之前已经在 profile 的 cordis.patch.yml 里手写了 wechat-bridge 的
+#    insert 行，**切换到这个渠道前请先删掉那行** —— 否则会挂载两次
+#    （两个桥实例、同一个微信账号、消息会被两边抢着拉走）。
+#
+# ⚠️ config 故意留空：
+#    - `sessionId` 是【每台机器不同】的（要指向你自己的 DSH 会话），
+#      装完在设置页里填，或者写进
+#      ~/.openclaw/openclaw-weixin/dsh-bridge-state.json 的 {"sessionId": "..."}。
+#      绝对不要在这里硬编码某台机器的会话 id。
+#    - 其余配置（cwd / mediaEnabled / notifyOnComplete…）都有合理默认值。
+- insert:
+    - id: wechat-bridge
+      name: dsh-wechat-bridge

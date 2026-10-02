@@ -1,0 +1,62 @@
+{
+  "name": "dsh-wechat-bridge",
+  "version": "1.0.0",
+  "description": "在微信里跟你的 DSH（DeepSeek Harness）会话对话。支持 DSH 0.2.0，文字/图片/文件双向收发。替代已停更的 @ccchase/dsh-plugin-wechat。",
+  "type": "module",
+  "main": "lib/index.js",
+  "files": [
+    "lib/",
+    "scripts/",
+    "vendor/",
+    "stubs/",
+    "README.md",
+    "LICENSE",
+    "cordis.patch.yml"
+  ],
+  "license": "MIT",
+  "keywords": [
+    "dsh",
+    "deepseek-harness",
+    "wechat",
+    "weixin",
+    "bridge",
+    "chatbot",
+    "plugin"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/AmeliaCai67/dsh-wechat-bridge.git"
+  },
+  "engines": {
+    "node": ">=22.13.0"
+  },
+  "dependencies": {
+    "zod": "^4.3.6",
+    "qrcode-terminal": "0.12.0",
+    "openclaw": "file:./stubs/openclaw"
+  },
+  "peerDependencies": {
+    "@deepseek-ai/dsh-llm": ">=0.1.0-rc.6 <0.3.0"
+  },
+  "peerDependenciesMeta": {
+    "@deepseek-ai/dsh-llm": {
+      "optional": true
+    }
+  },
+  "scripts": {
+    "test": "node scripts/selftest.mjs",
+    "login": "node scripts/login.mjs"
+  },
+  "homepage": "https://github.com/AmeliaCai67/dsh-wechat-bridge",
+  "bugs": {
+    "url": "https://github.com/AmeliaCai67/dsh-wechat-bridge/issues"
+  },
+  "dsh": {
+    "bundle": {
+      "patch": "./cordis.patch.yml"
+    },
+    "client": {
+      "platform": "web"
+    }
+  }
+}

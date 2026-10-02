@@ -1,0 +1,4 @@
+node_modules/
+*.log
+.wechat-inbox/
+.wechat-outbox/
