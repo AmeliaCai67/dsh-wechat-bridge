@@ -10,6 +10,7 @@
     "vendor/",
     "stubs/",
     "README.md",
+    "README.zh_CN.md",
     "LICENSE",
     "cordis.patch.yml"
   ],
@@ -35,7 +36,7 @@
     "qrcode-terminal": "0.12.0"
   },
   "peerDependencies": {
-    "@deepseek-ai/dsh-llm": ">=0.1.0-rc.6 <0.3.0"
+    "@deepseek-ai/dsh-llm": ">=0.2.0-rc.1 <0.3.0"
   },
   "peerDependenciesMeta": {
     "@deepseek-ai/dsh-llm": {

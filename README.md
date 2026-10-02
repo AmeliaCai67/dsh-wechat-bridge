@@ -1,179 +1,253 @@
 # dsh-wechat-bridge
 
-> 在微信里跟你的 [DSH](https://www.npmjs.com/package/@deepseek-ai/dsh)（DeepSeek Harness）会话对话。
-> **支持 DSH 0.2.0**。文字 / 图片 / 文件双向收發。
+[![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
+[![Node](https://img.shields.io/badge/node-%E2%89%A522.13.0-brightgreen.svg)](package.json)
+[![DSH](https://img.shields.io/badge/DSH-%E2%89%A50.2.0-4D6BFE.svg)](#requirements)
+[![WeChat](https://img.shields.io/badge/WeChat-iLink%20Bot-07C160.svg)](#how-it-works)
+[![Tested on macOS](https://img.shields.io/badge/tested%20on-macOS-lightgrey.svg)](#known-limitations)
 
-原来有个第三方插件 `@ccchase/dsh-plugin-wechat` 做这件事，但**作者从 2026-08-14 之后就没再维护过
-（连 repository 字段都没留），在 DSH 0.2.0 上直接起不来** —— 它 `inject` 的 `apiProxy` 服务在新版里没了。
+**English** ｜ [中文](./README.zh_CN.md)
 
-这个包是重写的替代品。**它不复刻那个壳子，而是直接 vendor 腾讯官方仍在维护的协议层。**
-
----
-
-## 它怎么工作
-
-```
-你的微信
-  → 腾讯 iLink Bot（HTTP 长轮询 getUpdates）
-  → vendor/weixin-dist/   腾讯官方 @tencent-weixin/openclaw-weixin 的编译产物（原样，零改动）
-  → lib/bridge.js         主循环：收 → 投给 DSH → 收回复 → 发回微信
-  → lib/native-transport.js  DSH 0.2.0 原生传输
-  → 你的 DSH 会话
-```
-
-### 两个关键设计
-
-**① 为什么 vendor 腾讯代码，而不是 `npm i` 它**
-
-官方包是个 **OpenClaw 宿主插件**（`peerDependencies: { openclaw: ">=2026.5.12" }`），
-不能当独立库 import（`package.json` 没有 `main`/`exports`，根目录也没有 `index.js`）。
-
-但我们对它的用法只碰 **8 个模块**，而它对宿主的依赖**只有 6 个具名符号**。
-所以本仓库原样复制它的编译产物，再用 **8 个 stub（共约 20 行）** 顶替 OpenClaw 宿主。
-详见 [`vendor/weixin-dist/README-VENDOR.md`](vendor/weixin-dist/README-VENDOR.md)。
-
-**② 为什么不用 `apiProxy`**
-
-旧壳子走 `ctx.apiProxy` —— 那层 RPC 信封在 DSH 0.2.0 里被移除了。
-0.2.0 有更直接的进程内 API：
-
-```js
-投消息  → agent.followup(createUserMessage({ content, source: { kind: 'user' } }))
-收回复  → ctx.on('session/event', (session, event) => …)
-列会话  → ctx.sessions.list()      （注意：只列【活着的】会话）
-拿 agent → ctx.agents.get(id)
-```
-
----
-
-## 安装
-
-### 一条命令（推荐）
+> Talk to your [DSH](https://www.npmjs.com/package/@deepseek-ai/dsh) (DeepSeek Harness) sessions
+> from WeChat. Text, images and files — both directions.
 
 ```bash
 dsh plugin --profile web add github:AmeliaCai67/dsh-wechat-bridge
 ```
 
-官方 CLI 会装包，看到包内声明的 **`dsh.bundle`** 就把它加进 `dsh.profile.bundles`，
-并在启动时合并**包内自带**的 `cordis.patch.yml` —— **不用手改任何 profile 文件。**
+---
 
-> ⚠️ 如果你之前已经手写过下面「手动挂载」那段 `insert`，**切换过来前先删掉它** ——
-> 否则会挂载两次（两个桥实例抢同一个微信账号的消息）。
+## Why this exists
 
-### 然后做两件事
+There was a third-party plugin, `@ccchase/dsh-plugin-wechat`, that did this. **Its author stopped
+publishing on 2026-08-14** (the package doesn't even carry a `repository` field) and **it cannot
+start on DSH 0.2.0 at all** — the `apiProxy` service it injects no longer exists.
 
-**① 登录**（首次扫码一次，凭据存到 `~/.openclaw/openclaw-weixin/accounts/`，之后不用再扫）
+This package is a rewrite. **It doesn't reimplement the shell — it vendors Tencent's protocol layer**,
+which is still actively maintained.
+
+---
+
+## Requirements
+
+| | |
+|---|---|
+| **DSH** | **≥ 0.2.0** — this bridge uses `ctx.sessions.list()`, `ctx.on('session/event')` and `agent.followup`, none of which exist in 0.1.x |
+| **Node** | ≥ 22.13.0 |
+| **OS** | Only verified on macOS so far (Node v24.13.0 + DSH 0.2.0-rc.2 + a real WeChat account) |
+| **WeChat** | A personal WeChat account you can scan a QR code with |
+
+---
+
+## Install
+
+### One command
+
+```bash
+dsh plugin --profile web add github:AmeliaCai67/dsh-wechat-bridge
+```
+
+The official CLI installs the package, sees the **`dsh.bundle`** metadata it declares, appends it to
+`dsh.profile.bundles`, and merges the `cordis.patch.yml` **shipped inside the package** on boot.
+**No profile files to edit.**
+
+> ⚠️ If you previously added the manual `insert` line yourself (see below), **remove it before
+> switching** — otherwise the plugin mounts twice and two bridge instances fight over the same
+> WeChat account's messages.
+
+### Then two things
+
+**① Log in** — scan once; credentials land in `~/.openclaw/openclaw-weixin/accounts/` and persist.
 
 ```bash
 node scripts/login.mjs
 ```
 
-**② 告诉桥「消息进哪个会话」**
+**② Tell the bridge which session to use**
 
 ```bash
 echo '{"sessionId":"session-xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx"}' \
   > ~/.openclaw/openclaw-weixin/dsh-bridge-state.json
 ```
 
-会话 id 可以从 DSH Web 的 URL、或 `~/.dsh/sessions/` 下的目录名里找到。
+Find the session id in the DSH Web URL, or as a directory name under `~/.dsh/sessions/`.
 
-> ⚠️ **为什么必须手动指定**：桥需要知道微信消息要进哪个 DSH 会话。
-> 不指定的话它会尝试**新建一个专用会话**，而**新建会话目前还没实现**
-> （见下方限制清单 —— 需要先搞定 agent preset 的组合，是个已知的待办）。
-> 所以现在这一步是必需的，不是可选的。
+> ⚠️ **Why this is manual:** the bridge needs to know which DSH session WeChat messages go to.
+> Without a pin it tries to **create a dedicated session**, and **session creation is not
+> implemented yet** (see the limitations table — it needs the agent-preset composition to be
+> resolved first). So right now this step is required, not optional.
 
-**③ 重启 DSH**，然后从微信给自己发一条消息。
+**③ Restart DSH**, then send a message to your bot from WeChat.
 
-### 手动挂载（备选）
+### Manual mount (alternative)
 
 ```yaml
 # ~/.dsh/profiles/web/cordis.patch.yml
 - insert:
     - id: wechat-bridge
-      # ⚠️ 必须用【相对路径】：裸包名要靠 pnpm 的依赖图解析，
-      #    而 DSH 的热重载不会重建依赖图。
-      # ⚠️ 也千万别加 ?v=1 —— 0.2.0 会把 ? 编码成 %3F 导致 import 失败。
+      # ⚠️ Must be a RELATIVE path: a bare package name resolves through pnpm's
+      #    dependency graph, and DSH's hot reload does not rebuild that graph.
+      # ⚠️ Never append ?v=1 — 0.2.0 encodes the ? as %3F and the import fails.
       name: '../../plugins/dsh-wechat-bridge/lib/main.js'
       config:
-        cwd: '/Users/you'          # 收发的媒体文件落在这里
+        cwd: '/Users/you'          # received/sent media lands here
         autoStart: true
 ```
 
 ---
 
-## 会话干完活推微信
-
-**默认开启。** 任何**会话**的一个 turn 结束时，推一条微信：
+## How it works
 
 ```
-✅ 给塔卡加语音输入 干完了
-⏱ 3 分 12 秒
-💬 搞定了，改了 3 个文件，冒烟全过。
-🔗 session-1a2b3c4d-…
+Your WeChat
+  → Tencent iLink Bot (HTTP long-poll getUpdates)
+  → vendor/weixin-dist/     compiled output of Tencent's @tencent-weixin/openclaw-weixin
+  → lib/bridge.js           main loop: receive → hand to DSH → collect reply → send back
+  → lib/native-transport.js DSH 0.2.0 native transport
+  → your DSH session
 ```
 
-**判据是「这个 turn 调用过工具」，不是耗时** —— 用耗时当判据是错的：agent 干活快的时候
-（几秒改完 3 个文件）永远触发不了阈值，通知等于没有。**「用过工具」才是「真干了活」的可靠信号。**
+### Two design decisions
 
-**五条克制的规则**（避免变成刷屏器）：
+**① Why vendor Tencent's code instead of `npm i` it**
 
-| 规则 | 为什么 |
-|---|---|
-| **只推调用过工具的 turn**（`notifyMinToolCalls: 1`） | 纯聊天不打扰你 |
-| **子代理会话不推** | `session/event` 是全局 emit，subagent 的事件也会进来 —— 不过滤的话每跑一次子代理都推一条 |
-| **微信自己发起的 turn 不推** | 回复已经原路发回微信了，再推一遍是回声 |
-| **本会话默认不推**（`notifyBoundSession: false`） | 你一般就在看着它 |
-| **只在真终态推**（完成 / 等你 / 打断 / 出错） | 中途步骤不推 |
+The official package is an **OpenClaw host plugin** (`peerDependencies: { openclaw: ">=2026.5.12" }`)
+and cannot be imported as a standalone library — its `package.json` has no `main`/`exports`, and the
+root has no `index.js`.
 
-**配置**：
+But we only touch **8 of its modules**, and its host dependency is just **6 named symbols**. So this
+repo copies its compiled output verbatim and substitutes **8 stubs (~20 lines total)** for the OpenClaw
+host. See [`vendor/weixin-dist/README-VENDOR.md`](vendor/weixin-dist/README-VENDOR.md) — including
+**the one change we had to make** (12 import paths rewritten to relative, nothing else).
 
-```yaml
-config:
-  notifyOnComplete: true        # 总开关
-  notifyMinToolCalls: 1         # 调用过几次工具才推（0 = 只要结束就推）
-  notifyMinDurationMs: 120000   # 兜底：没用工具但耗时超过这个数也推
-  notifyBoundSession: false     # 本会话要不要也推
+**② Why not `apiProxy`**
+
+The old shell went through `ctx.apiProxy` — that RPC envelope was removed in DSH 0.2.0.
+0.2.0 offers a more direct in-process API:
+
+```js
+send   → agent.followup(createUserMessage({ content, source: { kind: 'user' } }))
+receive → ctx.on('session/event', (session, event) => …)
+list   → ctx.sessions.list()      // note: only LIVE sessions
+agent  → ctx.agents.get(id)
 ```
-
-**⚠️ 它依赖 `context_token`，而这个 token 有次数/时效限制。** 过期后推送会失败（服务端 `ret=-2`）。
-**随手给 bot 发条微信就能刷新**，然后继续用。所以它更适合「你刚发过消息、然后去忙别的」这种节奏。
-
-**为什么不做成独立插件**：第三方的微信通知插件（如 `dsh-notify-plugin`）要**自己扫码登录 iLink bot** ——
-而一个微信只能连一个 bot、且连接后不可重复扫码。**它会跟本桥抢通道。** 复用桥已有的账号是零冲突的。
-
-## 已知限制（诚实清单）
-
-| 限制 | 说明 |
-|---|---|
-| **会话必须先在 Web 里打开着** | 冷恢复（浏览器关着时也能用）需要把 `agentPresets.resolve` + `mount` + 会话的模型选择一起传给 `ctx.agents.resume()`；**目前没实现**，没有活着的 agent 时桥会明确拒绝而不是建出坏 agent。**这是现在最大的短板。** |
-| 完成通知依赖 context_token | 过期后推不出去，需要你给 bot 发条消息刷新（见上一节）。 |
-| 不能自动建新会话 | `session.create` 未实现。桥固定接进 `dsh-bridge-state.json` 里指定的那个会话。 |
-| 只在 macOS 上验证过 | Node v24.13.0 + DSH 0.2.0-rc.2 + 一个真实微信账号。其它环境未测试。 |
-| 群聊未验证 | 腾讯的 `WeixinMessage` 里有 `group_id`，但上游 `channel.ts` 的 `capabilities.chatTypes` 只声明了 `["direct"]`。 |
-| `[表情: …]` 是 Web 专用 | 微信里要发图，在回复中独占一行写 `MEDIA:<文件绝对路径>` 或 `MEDIA:<https图片链接>`。 |
 
 ---
 
-## 媒体
+## Completion notifications
 
-**收**：微信发来的图片/文件/视频会下载解密后落盘到 `<cwd>/.wechat-inbox/`，然后作为附件进会话。
+**On by default.** When any session's turn ends, it pushes one WeChat message:
 
-**发**：在你的回复中**独占一行**写：
+```
+✅ add voice input to TAKA  done
+⏱ 3m 12s  ｜  🔧 5 steps
+💬 Finished — 3 files changed, smoke tests pass.
+🔗 session-1a2b3c4d-…
+```
+
+**The criterion is "did this turn call a tool", not elapsed time.** Using duration was wrong: a fast
+agent (three files rewritten in seconds) would never cross the threshold, so the feature would silently
+do nothing. **"It used a tool" is the reliable signal that real work happened.**
+
+**Five restraint rules** (so it doesn't become a spam cannon):
+
+| Rule | Why |
+|---|---|
+| **Only turns that called a tool** (`notifyMinToolCalls: 1`) | Pure chat shouldn't interrupt you |
+| **Never subagent sessions** | `session/event` is a global emit — subagent events arrive too, so without this filter every `subagent` call would push a notification |
+| **Never turns WeChat itself started** | The reply already went back over WeChat; pushing again would echo |
+| **Never the session you're typing in** (`notifyBoundSession: false`) | You're already looking at it |
+| **Only real terminal states** (completed / blocked / aborted / failed) | Not every intermediate step |
+
+```yaml
+config:
+  notifyOnComplete: true        # master switch
+  notifyMinToolCalls: 1         # how many tool calls before pushing (0 = always)
+  notifyMinDurationMs: 120000   # fallback: push if no tools but it ran this long
+  notifyBoundSession: false     # also push for the bound session?
+```
+
+**⚠️ It depends on `context_token`, which has a limited lifetime.** Once expired the push fails
+(server returns `ret=-2`). **Send the bot any WeChat message to refresh it.** This makes the feature a
+good fit for "I just messaged it, then went off to do something else."
+
+**Why not a standalone plugin:** third-party WeChat notifiers (e.g. `dsh-notify-plugin`) **log into an
+iLink bot themselves** — and one WeChat account can only bind one bot, cannot re-scan once bound. It
+would fight this bridge for the channel. Reusing the bridge's existing account is conflict-free.
+
+---
+
+## Media
+
+**Receive:** images / files / videos sent over WeChat are downloaded, decrypted and written to
+`<cwd>/.wechat-inbox/`, then surfaced to the session.
+
+**Send:** in your reply, put this **on its own line**:
 
 ```
 MEDIA:/absolute/path/to/photo.png
 MEDIA:https://example.com/image.jpg
 ```
 
-该指令行不会显示给用户。你也可以在 `MEDIA:` 那一行同时带上文字，会先发一条文本再发媒体。
+The directive line isn't shown to the user. You can put text on the same line — it sends the text
+first, then the media.
 
 ---
 
-## 致谢
+## Known limitations
 
-- 协议层：[`@tencent-weixin/openclaw-weixin`](https://www.npmjs.com/package/@tencent-weixin/openclaw-weixin)（Tencent，MIT）
-- `lib/bridge.js` / `lib/media.js` / `lib/inbox.js` 移植自 [`@ccchase/dsh-plugin-wechat`](https://www.npmjs.com/package/@ccchase/dsh-plugin-wechat) 的设计（作者已停更，未留仓库地址）。感谢原作者把收发循环写清楚了。
+| Limitation | Detail |
+|---|---|
+| **The session must already be open in the Web UI** | Cold resume (working with the browser closed) requires passing `agentPresets.resolve` + `mount` + the session's model selection into `ctx.agents.resume()`. **Not implemented yet.** With no live agent the bridge refuses explicitly rather than building a broken one. **This is the biggest gap right now.** |
+| **Completion notifications depend on `context_token`** | Once expired the push fails; send the bot a message to refresh. |
+| **Cannot create sessions** | `session.create` is unimplemented. The bridge is pinned to the session named in `dsh-bridge-state.json`. |
+| **Verified on macOS only** | Node v24.13.0 + DSH 0.2.0-rc.2 + one real WeChat account. Other environments untested. |
+| **Group chats unverified** | Tencent's `WeixinMessage` carries `group_id`, but upstream `channel.ts` declares `capabilities.chatTypes` as `["direct"]` only. |
+| **`[表情: …]` is Web-only** | To send an image over WeChat, use `MEDIA:<absolute path>` or `MEDIA:<https image url>` on its own line. |
 
-## 许可证
+---
 
-MIT（见 [`LICENSE`](LICENSE)）。分发包含腾讯的 MIT 代码，其许可证见 [`vendor/weixin-dist/LICENSE`](vendor/weixin-dist/LICENSE)。
+## Development
+
+```bash
+node scripts/selftest.mjs              # 28 checks: module exports, host stubs, contracts, and a real apply()
+node scripts/patch-vendor.mjs          # re-apply the vendor import patch (after upgrading upstream)
+node scripts/patch-vendor.mjs --check  # verify no bare "openclaw/plugin-sdk/*" specifiers remain
+```
+
+**On verification:** a local run is not proof. Of the three ways we tried to ship the host stubs,
+**two worked locally and broke on install.** Always test the *installed* artifact:
+
+```bash
+dsh plugin --profile __test__ add github:AmeliaCai67/dsh-wechat-bridge
+# then import and apply() the package from the throwaway profile's node_modules
+```
+
+The last check in `selftest.mjs` — **actually calling `apply()` with a mock ctx** — exists because a
+scope error once shipped with 24/24 checks green while the plugin failed to load entirely.
+Importing a module is not the same as initializing it.
+
+---
+
+## Credits
+
+- Protocol layer: [`@tencent-weixin/openclaw-weixin`](https://www.npmjs.com/package/@tencent-weixin/openclaw-weixin) (Tencent, MIT)
+- `lib/bridge.js` / `lib/media.js` / `lib/inbox.js` are ported from the design of
+  [`@ccchase/dsh-plugin-wechat`](https://www.npmjs.com/package/@ccchase/dsh-plugin-wechat)
+  (unmaintained, no repository published). Thanks to the original author for making the
+  send/receive loop legible.
+
+## Changelog
+
+### 1.0.0
+
+- First release.
+- Text, image and file transfer in both directions.
+- Completion notifications (five restraint rules above).
+- Ships the OpenClaw host stubs as part of the package, with the vendor imports rewritten to
+  relative paths so the published package actually works.
+
+## License
+
+MIT — see [`LICENSE`](LICENSE). Distribution includes Tencent's MIT-licensed code; its license text is
+in [`vendor/weixin-dist/LICENSE`](vendor/weixin-dist/LICENSE).
