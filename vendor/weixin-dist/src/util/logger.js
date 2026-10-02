@@ -1,7 +1,7 @@
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { resolvePreferredOpenClawTmpDir } from "openclaw/plugin-sdk/infra-runtime";
+import { resolvePreferredOpenClawTmpDir } from "../../../../stubs/openclaw/plugin-sdk/infra-runtime.js";
 /**
  * Plugin logger — writes JSON lines to the main openclaw log file:
  *   <tmpDir>/openclaw-YYYY-MM-DD.log

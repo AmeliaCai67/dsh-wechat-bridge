@@ -1,8 +1,8 @@
 import path from "node:path";
 import { randomUUID } from "node:crypto";
-import { createTypingCallbacks } from "openclaw/plugin-sdk/channel-message";
-import { resolveSenderCommandAuthorizationWithRuntime, resolveDirectDmAuthorizationOutcome, } from "openclaw/plugin-sdk/command-auth";
-import { resolvePreferredOpenClawTmpDir } from "openclaw/plugin-sdk/infra-runtime";
+import { createTypingCallbacks } from "../../../../stubs/openclaw/plugin-sdk/channel-message.js";
+import { resolveSenderCommandAuthorizationWithRuntime, resolveDirectDmAuthorizationOutcome, } from "../../../../stubs/openclaw/plugin-sdk/command-auth.js";
+import { resolvePreferredOpenClawTmpDir } from "../../../../stubs/openclaw/plugin-sdk/infra-runtime.js";
 import { sendTyping } from "../api/api.js";
 import { MessageItemType, TypingStatus } from "../api/types.js";
 import { loadWeixinAccount } from "../auth/accounts.js";

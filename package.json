@@ -8,6 +8,7 @@
     "lib/",
     "scripts/",
     "vendor/",
+    "stubs/",
     "README.md",
     "LICENSE",
     "cordis.patch.yml"
@@ -43,7 +44,8 @@
   },
   "scripts": {
     "test": "node scripts/selftest.mjs",
-    "login": "node scripts/login.mjs"
+    "login": "node scripts/login.mjs",
+    "patch-vendor": "node scripts/patch-vendor.mjs"
   },
   "homepage": "https://github.com/AmeliaCai67/dsh-wechat-bridge",
   "bugs": {

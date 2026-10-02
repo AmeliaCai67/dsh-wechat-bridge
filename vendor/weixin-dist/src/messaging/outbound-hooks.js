@@ -1,5 +1,5 @@
-import { fireAndForgetHook, buildCanonicalSentMessageHookContext, toPluginMessageContext, toPluginMessageSentEvent, } from "openclaw/plugin-sdk/hook-runtime";
-import { getGlobalHookRunner } from "openclaw/plugin-sdk/plugin-runtime";
+import { fireAndForgetHook, buildCanonicalSentMessageHookContext, toPluginMessageContext, toPluginMessageSentEvent, } from "../../../../stubs/openclaw/plugin-sdk/hook-runtime.js";
+import { getGlobalHookRunner } from "../../../../stubs/openclaw/plugin-sdk/plugin-runtime.js";
 import { logger } from "../util/logger.js";
 const CHANNEL_ID = "openclaw-weixin";
 /**

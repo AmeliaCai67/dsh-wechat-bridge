@@ -1,6 +1,6 @@
 import path from "node:path";
-import { normalizeAccountId } from "openclaw/plugin-sdk/account-id";
-import { resolvePreferredOpenClawTmpDir } from "openclaw/plugin-sdk/infra-runtime";
+import { normalizeAccountId } from "../../../stubs/openclaw/plugin-sdk/account-id.js";
+import { resolvePreferredOpenClawTmpDir } from "../../../stubs/openclaw/plugin-sdk/infra-runtime.js";
 import { registerWeixinAccountId, loadWeixinAccount, saveWeixinAccount, listWeixinAccountIds, resolveWeixinAccount, triggerWeixinChannelReload, clearStaleAccountsForUserId, DEFAULT_BASE_URL, } from "./auth/accounts.js";
 import { notifyStop, notifyStart } from "./api/api.js";
 import { assertSessionActive } from "./api/session-guard.js";

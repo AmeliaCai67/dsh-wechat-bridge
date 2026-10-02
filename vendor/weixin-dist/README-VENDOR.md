@@ -36,3 +36,43 @@ cp package/LICENSE vendor/weixin-dist/LICENSE
 ```
 
 然后跑一遍 `npm test`（会核对 8 个模块的导出是否仍然齐全）。
+
+---
+
+## 我们对上游做的唯一改动（2026-10-02）
+
+**改了 7 个文件里的 12 处 import 语句**，把对 OpenClaw 宿主的裸包名引用改成了相对路径：
+
+```diff
+- import { normalizeAccountId } from "openclaw/plugin-sdk/account-id";
++ import { normalizeAccountId } from "../../../../stubs/openclaw/plugin-sdk/account-id.js";
+```
+
+**除了这些 import 路径，一行代码都没动**（逻辑、常量、注释全部保持原样）。
+
+### 为什么非改不可
+
+腾讯代码 import 的 `openclaw/plugin-sdk/*` 需要一个宿主替身，而**替身放进 `node_modules`
+是发不出去的** —— 实测三条路全堵：
+
+| 做法 | 结果 |
+|---|---|
+| 顶层 `node_modules/openclaw/` | ❌ npm/pnpm 发布时剥掉 `node_modules` |
+| `vendor/…/node_modules/openclaw/` | ❌ pnpm 安装时把嵌套的 `node_modules` 也剪掉（实测 `ERR_MODULE_NOT_FOUND`） |
+| `"openclaw": "file:./stubs/openclaw"` | ❌ pnpm 把 `file:` 当成【安装目录】的相对路径：`ERR_PNPM_LINKED_PKG_DIR_NOT_FOUND` |
+
+**相对路径不需要任何 `node_modules`，放进包里就一定能解析。**
+
+### 升级上游之后
+
+```bash
+# 1. 用新版覆盖 vendor/weixin-dist/ 的内容（保留本文件、LICENSE、package.json）
+# 2. 重新打补丁
+node scripts/patch-vendor.mjs
+# 3. 确认没有漏网的裸包名
+node scripts/patch-vendor.mjs --check
+# 4. 跑自检
+node scripts/selftest.mjs
+```
+
+`scripts/patch-vendor.mjs` 会按每个文件所在的层级自动算好相对路径，是幂等的。

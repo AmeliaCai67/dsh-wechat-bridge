@@ -1,6 +1,6 @@
 import fs from "node:fs";
 import path from "node:path";
-import { normalizeAccountId } from "openclaw/plugin-sdk/account-id";
+import { normalizeAccountId } from "../../../../stubs/openclaw/plugin-sdk/account-id.js";
 import { resolveStateDir } from "../storage/state-dir.js";
 import { deleteQuoteCacheForAccount } from "../messaging/quote-store.js";
 import { resolveFrameworkAllowFromPath } from "./pairing.js";
@@ -278,7 +278,7 @@ export function loadConfigBotAgent() {
  */
 export async function triggerWeixinChannelReload() {
     try {
-        const { loadConfig, writeConfigFile } = await import("openclaw/plugin-sdk/config-runtime");
+        const { loadConfig, writeConfigFile } = await import("../../../../stubs/openclaw/plugin-sdk/config-runtime.js");
         const cfg = loadConfig();
         const channels = (cfg.channels ?? {});
         const existing = channels["openclaw-weixin"] ?? {};
