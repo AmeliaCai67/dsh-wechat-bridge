@@ -55,7 +55,7 @@ const STUBS = {
 }
 for (const [sub, names] of Object.entries(STUBS)) {
   try {
-    const m = await import(`../node_modules/openclaw/plugin-sdk/${sub}.js`)
+    const m = await import(`../vendor/weixin-dist/node_modules/openclaw/plugin-sdk/${sub}.js`)
     const missing = names.filter((n) => !(n in m))
     if (missing.length) bad(`${sub} 缺少：${missing.join(', ')}`)
     else ok(sub)
@@ -66,14 +66,14 @@ for (const [sub, names] of Object.entries(STUBS)) {
 
 console.log('\n── 三个必须成立的契约 ──')
 try {
-  const { normalizeAccountId } = await import('../node_modules/openclaw/plugin-sdk/account-id.js')
+  const { normalizeAccountId } = await import('../vendor/weixin-dist/node_modules/openclaw/plugin-sdk/account-id.js')
   normalizeAccountId('a@im.bot') === 'a@im.bot'
     ? ok('normalizeAccountId 恒等（改了会让 sync 游标另存一份，出两套状态）')
     : bad('normalizeAccountId 不是恒等 —— 必须原样返回！')
 } catch (e) { bad('normalizeAccountId 检查失败：' + e.message) }
 
 try {
-  const { getGlobalHookRunner } = await import('../node_modules/openclaw/plugin-sdk/plugin-runtime.js')
+  const { getGlobalHookRunner } = await import('../vendor/weixin-dist/node_modules/openclaw/plugin-sdk/plugin-runtime.js')
   const r = getGlobalHookRunner()
   ;(typeof r?.hasHooks === 'undefined')
     ? ok('getGlobalHookRunner 没有 hasHooks（有了上游会去跑不存在的 hook）')
@@ -81,7 +81,7 @@ try {
 } catch (e) { bad('getGlobalHookRunner 检查失败：' + e.message) }
 
 try {
-  const { withFileLock } = await import('../node_modules/openclaw/plugin-sdk/infra-runtime.js')
+  const { withFileLock } = await import('../vendor/weixin-dist/node_modules/openclaw/plugin-sdk/infra-runtime.js')
   const v = await withFileLock('/tmp/x', { timeoutMs: 1 }, async () => 'ok')
   v === 'ok' ? ok('withFileLock 支持三参数 (path, options, fn)') : bad('withFileLock 返回值不对')
 } catch (e) { bad('withFileLock 三参数调用失败：' + e.message) }

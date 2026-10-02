@@ -8,7 +8,6 @@
     "lib/",
     "scripts/",
     "vendor/",
-    "stubs/",
     "README.md",
     "LICENSE",
     "cordis.patch.yml"
@@ -32,8 +31,7 @@
   },
   "dependencies": {
     "zod": "^4.3.6",
-    "qrcode-terminal": "0.12.0",
-    "openclaw": "file:./stubs/openclaw"
+    "qrcode-terminal": "0.12.0"
   },
   "peerDependencies": {
     "@deepseek-ai/dsh-llm": ">=0.1.0-rc.6 <0.3.0"
