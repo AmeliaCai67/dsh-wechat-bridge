@@ -194,6 +194,7 @@ MEDIA:https://example.com/image.jpg
 | **不能自动建新会话** | `session.create` 未实现。桥固定接进 `dsh-bridge-state.json` 里指定的那个会话。 |
 | **只在 macOS 上验证过** | Node v24.13.0 + DSH `0.2.0-rc.2` 与 `0.2.1-alpha.1` + 一个真实微信账号。其它环境未测试。 |
 | **群聊未验证** | 腾讯的 `WeixinMessage` 里有 `group_id`，但上游 `channel.ts` 的 `capabilities.chatTypes` 只声明了 `["direct"]`。 |
+| **重复扫码会登录一个「新 bot」** | 再扫一次二维码**不是给旧号换 token**，而是注册一个**全新的 bot id** 并追加进 `~/.openclaw/openclaw-weixin/accounts.json`。一个微信号同时只能绑一个 bot。从 `1.0.1` 起，桥取的是**最近登录**的那个账号（按 `accounts/<id>.json` 的 mtime），而不是 `accountIds[0]` —— 所以哪台机器最后扫的，哪台就生效。**`1.0.1` 之前永远取数组第一个**，于是重扫之后会继续轮询那个已经失效的旧号、**一条消息都收不到**。换账号后需要重启 DSH（账号是桥启动时读进内存的）。 |
 | **`[表情: …]` 是 Web 专用** | 微信里要发图，在回复中独占一行写 `MEDIA:<文件绝对路径>` 或 `MEDIA:<https图片链接>`。 |
 
 ---

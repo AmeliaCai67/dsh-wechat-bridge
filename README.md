@@ -204,6 +204,7 @@ first, then the media.
 | **Cannot create sessions** | `session.create` is unimplemented. The bridge is pinned to the session named in `dsh-bridge-state.json`. |
 | **Verified on macOS only** | Node v24.13.0 + DSH `0.2.0-rc.2` and `0.2.1-alpha.1` + one real WeChat account. Other environments untested. |
 | **Group chats unverified** | Tencent's `WeixinMessage` carries `group_id`, but upstream `channel.ts` declares `capabilities.chatTypes` as `["direct"]` only. |
+| **Re-scanning logs in a *new* bot** | Scanning the QR again does **not** refresh the old bot's token — it registers a **brand-new bot id** and appends it to `~/.openclaw/openclaw-weixin/accounts.json`. A WeChat account can only be bound to one bot at a time. Since `1.0.1` the bridge picks the **most recently logged-in** account (by `accounts/<id>.json` mtime) rather than `accountIds[0]`, so whichever machine scanned last is the one that works. **Before `1.0.1` it always took the first entry**, so re-scanning silently kept polling the dead account and received nothing. Requires a DSH restart (the account is read into memory at bridge startup). |
 | **`[表情: …]` is Web-only** | To send an image over WeChat, use `MEDIA:<absolute path>` or `MEDIA:<https image url>` on its own line. |
 
 ---
