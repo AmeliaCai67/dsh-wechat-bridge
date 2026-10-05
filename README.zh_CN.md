@@ -32,8 +32,9 @@ dsh plugin --profile web add github:AmeliaCai67/dsh-wechat-bridge
 | | |
 |---|---|
 | **DSH** | **≥ 0.2.0** —— 本桥用了 `ctx.sessions.list()`、`ctx.on('session/event')`、`agent.followup`，这些在 0.1.x 里都不存在 |
+| **实际验证过的版本** | DSH `0.2.0-rc.2`（2026-10-01）与 `0.2.1-alpha.1`（2026-10-04，双向往返实测）。**`0.2.0` 正式版以及中间其它版本没有跑过** —— `≥ 0.2.0` 这个下限来自上面的 API 分析，不是来自实测。 |
 | **Node** | ≥ 22.13.0 |
-| **操作系统** | 目前只在 macOS 上验证过（Node v24.13.0 + DSH 0.2.0-rc.2 + 一个真实微信账号） |
+| **操作系统** | 目前只在 macOS 上验证过（Node v24.13.0 + 一个真实微信账号） |
 | **微信** | 一个你能扫码登录的个人微信号 |
 
 ---
@@ -52,7 +53,7 @@ dsh plugin --profile web add github:AmeliaCai67/dsh-wechat-bridge
 > ⚠️ 如果你之前已经手写过下面「手动挂载」那段 `insert`，**切换过来前先删掉它** ——
 > 否则会挂载两次，两个桥实例会抢同一个微信账号的消息。
 
-### 然后做两件事
+### 然后做三件事
 
 **① 登录** —— 扫码一次；凭据落到 `~/.openclaw/openclaw-weixin/accounts/`，之后长期有效。
 
@@ -191,7 +192,7 @@ MEDIA:https://example.com/image.jpg
 | **会话必须先在 Web 里打开着** | 冷恢复（浏览器关着时也能用）需要把 `agentPresets.resolve` + `mount` + 会话的模型选择一起传给 `ctx.agents.resume()`。**目前没实现。** 没有活着的 agent 时，桥会明确拒绝，而不是建出一个坏 agent。**这是现在最大的短板。** |
 | **完成通知依赖 `context_token`** | 过期后推不出去；给 bot 发条消息就能刷新。 |
 | **不能自动建新会话** | `session.create` 未实现。桥固定接进 `dsh-bridge-state.json` 里指定的那个会话。 |
-| **只在 macOS 上验证过** | Node v24.13.0 + DSH 0.2.0-rc.2 + 一个真实微信账号。其它环境未测试。 |
+| **只在 macOS 上验证过** | Node v24.13.0 + DSH `0.2.0-rc.2` 与 `0.2.1-alpha.1` + 一个真实微信账号。其它环境未测试。 |
 | **群聊未验证** | 腾讯的 `WeixinMessage` 里有 `group_id`，但上游 `channel.ts` 的 `capabilities.chatTypes` 只声明了 `["direct"]`。 |
 | **`[表情: …]` 是 Web 专用** | 微信里要发图，在回复中独占一行写 `MEDIA:<文件绝对路径>` 或 `MEDIA:<https图片链接>`。 |
 

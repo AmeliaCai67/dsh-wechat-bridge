@@ -33,8 +33,9 @@ which is still actively maintained.
 | | |
 |---|---|
 | **DSH** | **≥ 0.2.0** — this bridge uses `ctx.sessions.list()`, `ctx.on('session/event')` and `agent.followup`, none of which exist in 0.1.x |
+| **Actually verified on** | DSH `0.2.0-rc.2` (2026-10-01) and `0.2.1-alpha.1` (2026-10-04, full round trip). `0.2.0` stable and anything else in between is **untested** — the `≥ 0.2.0` floor comes from the API analysis above, not from a run. |
 | **Node** | ≥ 22.13.0 |
-| **OS** | Only verified on macOS so far (Node v24.13.0 + DSH 0.2.0-rc.2 + a real WeChat account) |
+| **OS** | macOS only so far (Node v24.13.0 + a real WeChat account) |
 | **WeChat** | A personal WeChat account you can scan a QR code with |
 
 ---
@@ -55,7 +56,7 @@ The official CLI installs the package, sees the **`dsh.bundle`** metadata it dec
 > switching** — otherwise the plugin mounts twice and two bridge instances fight over the same
 > WeChat account's messages.
 
-### Then two things
+### Then three things
 
 **① Log in** — scan once; credentials land in `~/.openclaw/openclaw-weixin/accounts/` and persist.
 
@@ -201,7 +202,7 @@ first, then the media.
 | **The session must already be open in the Web UI** | Cold resume (working with the browser closed) requires passing `agentPresets.resolve` + `mount` + the session's model selection into `ctx.agents.resume()`. **Not implemented yet.** With no live agent the bridge refuses explicitly rather than building a broken one. **This is the biggest gap right now.** |
 | **Completion notifications depend on `context_token`** | Once expired the push fails; send the bot a message to refresh. |
 | **Cannot create sessions** | `session.create` is unimplemented. The bridge is pinned to the session named in `dsh-bridge-state.json`. |
-| **Verified on macOS only** | Node v24.13.0 + DSH 0.2.0-rc.2 + one real WeChat account. Other environments untested. |
+| **Verified on macOS only** | Node v24.13.0 + DSH `0.2.0-rc.2` and `0.2.1-alpha.1` + one real WeChat account. Other environments untested. |
 | **Group chats unverified** | Tencent's `WeixinMessage` carries `group_id`, but upstream `channel.ts` declares `capabilities.chatTypes` as `["direct"]` only. |
 | **`[表情: …]` is Web-only** | To send an image over WeChat, use `MEDIA:<absolute path>` or `MEDIA:<https image url>` on its own line. |
 
